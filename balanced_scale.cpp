@@ -23,8 +23,7 @@ std::vector<std::string> splitStr(const std::string &s, char delim) {
     return v;
 }
 
-class Scale;
-std::unordered_map<std::string, Scale> scalesMap;
+int getScaleMasses(const std::string &scaleName);
 
 class Scale {
 public:
@@ -42,15 +41,6 @@ public:
         return {target - left, target - right};
     }
 
-private:
-    static int getMasses(const std::string &massOrScale) {
-        if (std::isdigit(massOrScale.front()))
-            return std::stoi(massOrScale);
-
-        const auto &scale = scalesMap.at(massOrScale);
-        return scale.getTotalMasses();
-    }
-
     int getTotalMasses() const {
         if (!totalMasses_) {
             int left = getMasses(left_);
@@ -63,11 +53,24 @@ private:
     }
 
 private:
+    int getMasses(const std::string &massOrScale) const {
+        if (std::isdigit(massOrScale.front()))
+            return std::stoi(massOrScale);
+
+        return getScaleMasses(massOrScale); // it's a scale
+    }
+
+private:
     const std::string name_;
     const std::string left_;
     const std::string right_;
     mutable int totalMasses_ = 0;
 };
+
+std::unordered_map<std::string, Scale> scalesMap;
+int getScaleMasses(const std::string &scaleName) {
+    return scalesMap.at(scaleName).getTotalMasses();
+}
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
