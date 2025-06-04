@@ -1,6 +1,6 @@
 
 // happy to supply unit tests if required
-// can be more efficient if required
+// can be more efficient or more error checking if required
 
 #include <iostream>
 #include <fstream>
