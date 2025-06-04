@@ -1,22 +1,26 @@
+
 // happy to supply unit tests if required
+// can be more efficient if required
 
 #include <iostream>
 #include <fstream>
-#include <memory>
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <ranges>
 
-std::vector<std::string> split(const std::string &line, char delim) {
-    std::vector<std::string> res;
-    res.reserve(3);
+std::vector<std::string> splitStr(const std::string &s, char delim) {
+    std::vector<std::string> v;
+    v.reserve(3);
 
-    auto parts = std::views::split(line, delim);
-    for (auto &&part: parts)
-        res.emplace_back(part.begin(), part.end());
+    size_t start = 0;
+    size_t end = 0;
+    while (end != std::string::npos) {
+        end = s.find(delim, start);
+        v.push_back(s.substr(start, end - start)); // works even if end == npos
+        start = end + 1;
+    }
 
-    return res;
+    return v;
 }
 
 class Scale;
@@ -29,8 +33,6 @@ public:
         left_(left),
         right_(right) {
     }
-
-    const std::string &name() const { return name_; }
 
     std::pair<int, int> calcExtraMasses() const {
         int left = getMasses(left_);
@@ -61,9 +63,9 @@ private:
     }
 
 private:
-    std::string name_;
-    std::string left_;
-    std::string right_;
+    const std::string name_;
+    const std::string left_;
+    const std::string right_;
     mutable int totalMasses_ = 0;
 };
 
@@ -82,21 +84,21 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> scaleNames; // in the order appearing in file
     std::string line;
     while (std::getline(reader, line)) {
-        if (line.empty() || line.starts_with('#'))
+        if (line.empty() || line.front() == '#')
             continue;
 
-        auto parts = split(line, ',');
+        auto parts = splitStr(line, ',');
         if (parts.size() != 3)
             throw std::runtime_error("Expecting 3 fields in " + line);
 
         const auto &[scaleName, left, right] = tie(parts[0], parts[1], parts[2]);
         scalesMap.emplace(scaleName, Scale(scaleName, left, right));
-        scaleNames.emplace_back(scaleName);
+        scaleNames.push_back(scaleName);
     }
 
     for (const auto &name: scaleNames) {
         const auto &scale = scalesMap.at(name);
         auto [leftExtra, rightExtra] = scale.calcExtraMasses();
-        std::cout << scale.name() << ',' << leftExtra << ',' << rightExtra << std::endl;
+        std::cout << name << ',' << leftExtra << ',' << rightExtra << '\n';
     }
 }
